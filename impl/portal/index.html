@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Portal — Passkey Enrolment Demo</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main>
+    <h1>Portal</h1>
+    <p>You are logged in via Verimi (simulated).</p>
+    <button id="createPasskey">Create a passkey</button>
+    <p id="status"></p>
+  </main>
+
+  <div id="popup" class="hidden">
+    <div class="card">
+      <h2>Keep your access after 2026</h2>
+      <p>Verimi shuts down at the end of 2026. Create a passkey now to keep logging in.</p>
+      <button id="startEnrol">Create passkey</button>
+      <button id="dismiss">Not now</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

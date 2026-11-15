@@ -1,0 +1,55 @@
+My whole system consists of:
+- 9 portals (vw-baev.de, ltkv.de, ... all have different domains than *.gateway-vw.de), where people log in via verimi (an external Identitiy provider that will shut down it's service commpletly at the end of 2026)
+- AWS Lambda used by my portal for the backend
+- On IONOS VPS I have Docker accessiable via kc.gateway-vw.de:8443 (public) and kc-admin.gateway-vw.de:8444 (admin console) running with nginx, keycloak, and postgres DB. This is used for providing access to the portal via passkey after verimi shuts down
+
+While verimi is still active, users should be urged to create a passkey via keycloak. The process should look like this:
+1: User logs in via verimi
+2: User should get a pop up with a button saying it should create a passkey
+3: User clicks on that button (at this point we already know he's a genuine user because he is logged in to the portal already), Lambda should create a user on keycloak
+4: A notification should appear that the user can now create a passkey, e.g. scanning a QR code, using an usb stick etc.
+
+My constraints:
+- I want to do that without using Java and
+- without changing verimi code (verimi stopped implementing already because they'll will be shutdown).
+- I don't want to ask verimi to do anything - the project should be self-relient
+- The tech stack that is available to me and that I can change are JavaScript, AWS Lambda, Docker, nginx, keycloak, postgres.
+
+My questions: 
+a) Is it possible and recommended for a production ready application to implement that workflow?
+b) Is it recommended and secure to use impersonation for that? Mind you: At the point where he is asked to create a passkey, he is already in the portal, i.e. verimi vouched for his identity. Also the user will only need (and is only allowed) to create one passkey. (unless he wants to recover his passkey)
+c) What other alternative exists that are recommended and secure? Which one is the most standard?
+
+//----------
+
+Identity Brokering + kc_action=webauthn-register
+
+q1: How would a redisgned step 3 work flow looks like?
+q2: How do I register verimi as an Identity Provider (OIDC/SAML IdP) inside Keycloak?
+q3_option1: How would the implementation of redirect to Keycloak with kc_idp_hint=verimi + kc_action=webauthn-register-passwordless:skip_if_exists.looks like - how would the Lambda Code looks like, what configuration in keycloak needs to change?
+q4_option1: Regarding: "Only prerequisite: Verimi must let you register one more OIDC/SAML client (redirect URI = Keycloak). " - How do I verify this and if it works, how do I do this? I need a step-by-step explanation
+q5_option1b: How do I let the button use the Keycloak redirect with kc_idp_hint=verimi? Does the button call an endpoint to keycloak? If so, how does the endpoint look like - what parameter does it need?
+q6_option2: What implementation steps would be required for "enrol everyone automatically,"?
+q7_option3: what do you mean with "If you cannot broker in the browser"? How does "broker in the browser" looks like - what do I need to do?
+q8_option3: How do I configure Verimi as an IdP for token validation?
+q9_option3: How does the implementation process looks like for lambda exchanges the Verimi token for a Keycloak token (RFC 8693)?
+q10_option4: "Lambda creates the user" - Isn't this what you recommend not to do?
+q11_option4: Where do I call or set webauthn-register action?
+q12_level2Container: How to build Keycloak authorize URL (PKCE)?
+q13_level3Keycloak: How do I do the federated Identity Link (subject - keycloak user)?
+q14_scaleability: What do you mean with the scale risk is sessions? How would you mitigate that risk?
+q15_openquestion1: Verimi protocol: OIDC or SAML? - is it possible to find it out myself?
+q16_openquestion2: Host the Docker containers (nginx, keycloak and postgres) is on IONOS VPS
+q17_openquestion3: User scale is round 190000 withou around 500 - 1000 logins per day
+q18_openquestion4: the public url is https://kc.gateway-vw.de:8443. The admin console is https://kc-admin.gateway-vw.de:8444
+q19_openquestion5: What do you mean - how the users log into verimi? They are using username + password
+q20_openquestion6: the user. When creating a passkey, the user gets random words that he has to save somewhere. When the user wants to reset his passkey, he clicks on "reset my passkey" and then has to type these random words
+q21_openquestion7: gdpr
+
+//
+q22_Q1: How does the code looks like? 
+q23_Q2: Can I set these configuration with a script, too?
+q24_
+	 
+
+

@@ -1,0 +1,16 @@
+{
+  "name": "vw-passkey-demo-tests",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Unit tests (node:test, no deps) and browser E2E tests for the Verimi -> passkey demo.",
+  "type": "commonjs",
+  "scripts": {
+    "test": "node --test \"unit/**/*.test.js\"",
+    "test:e2e": "node e2e/run.js",
+    "check": "node --check unit/handler.test.js && node --check unit/contract.test.js && node --check e2e/run.js"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.49.0"
+  },
+  "license": "UNLICENSED"
+}

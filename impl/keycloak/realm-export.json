@@ -1,0 +1,77 @@
+{
+  "realm": "vw-beav",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "bruteForceProtected": true,
+  "roles": {
+    "realm": [
+      { "name": "portal-user", "description": "Standard portal user" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "portal-spa",
+      "name": "Portal SPA",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "protocol": "openid-connect",
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "redirectUris": [
+        "https://portal.example.com/auth/callback",
+        "http://localhost:3000/auth/callback"
+      ],
+      "webOrigins": [
+        "https://portal.example.com",
+        "http://localhost:3000"
+      ],
+      "defaultClientScopes": ["web-origins", "acr", "roles", "profile", "email"]
+    }
+  ],
+  "identityProviders": [
+    {
+      "alias": "verimi",
+      "providerId": "oidc",
+      "enabled": true,
+      "trustEmail": true,
+      "storeToken": false,
+      "addReadTokenRoleOnCreate": false,
+      "firstBrokerLoginFlowAlias": "first broker login",
+      "config": {
+        "clientId": "REPLACE_WITH_VERIMI_CLIENT_ID",
+        "clientSecret": "REPLACE_WITH_VERIMI_CLIENT_SECRET",
+        "authorizationUrl": "https://verimi.example.com/oauth/authorize",
+        "tokenUrl": "https://verimi.example.com/oauth/token",
+        "userInfoUrl": "https://verimi.example.com/oauth/userinfo",
+        "jwksUrl": "https://verimi.example.com/.well-known/jwks.json",
+        "issuer": "https://verimi.example.com",
+        "defaultScopes": "openid profile email",
+        "syncMode": "IMPORT",
+        "validateSignature": "true"
+      }
+    }
+  ],
+  "components": {
+    "org.keycloak.userprofile.UserProfileProvider": []
+  },
+  "webAuthnPolicyPasswordless": {
+    "rpEntityName": "Gateway VW",
+    "signatureAlgorithms": ["ES256", "RS256"],
+    "rpId": "kc.gateway-vw.de",
+    "attestationConveyancePreference": "none",
+    "authenticatorAttachment": "",
+    "requireResidentKey": "required",
+    "userVerificationRequirement": "required",
+    "createTimeout": 0,
+    "avoidSameAuthenticatorRegister": true,
+    "acceptableAaguids": []
+  }
+}

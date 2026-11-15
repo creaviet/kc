@@ -1,0 +1,16 @@
+# Local secrets & generated material -- never commit
+.env
+certs/*
+!certs/.gitkeep
+
+# Runtime state
+data/
+*.log
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Editor / OS noise
+.DS_Store
+*.swp

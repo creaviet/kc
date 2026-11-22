@@ -1,0 +1,14 @@
+{
+  "expectedPortalCount": 9,
+  "portals": [
+    { "host": "vw-baev.de", "realm": "vw-beav", "displayName": "VW BEAV Portal" },
+    { "host": "ltkv.de", "realm": "ltkv", "displayName": "LTKV Portal" },
+    { "host": "portal3.example.org", "realm": "portal3", "displayName": "Portal 3 — replace host" },
+    { "host": "portal4.example.org", "realm": "portal4", "displayName": "Portal 4 — replace host" },
+    { "host": "portal5.example.org", "realm": "portal5", "displayName": "Portal 5 — replace host" },
+    { "host": "portal6.example.org", "realm": "portal6", "displayName": "Portal 6 — replace host" },
+    { "host": "portal7.example.org", "realm": "portal7", "displayName": "Portal 7 — replace host" },
+    { "host": "portal8.example.org", "realm": "portal8", "displayName": "Portal 8 — replace host" },
+    { "host": "portal9.example.org", "realm": "portal9", "displayName": "Portal 9 — replace host" }
+  ]
+}

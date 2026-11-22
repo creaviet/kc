@@ -1,0 +1,277 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >-
+  Production BFF for Keycloak IdP brokering + passkey enrolment.
+  Secrets are resolved at deploy time from SSM SecureString / Secrets Manager.
+  Map /api on each portal custom domain to the HttpApi created here.
+
+Parameters:
+  Phase:
+    Type: String
+    Default: B
+    AllowedValues: [B, C]
+    Description: B = Verimi bootstrap + passkey enrolment, C = passkey-only.
+  KcBaseUrl:
+    Type: String
+    Default: https://kc.gateway-vw.de:8443
+    Description: Server-side Keycloak base URL for the Account API credential check.
+  KcPublicUrl:
+    Type: String
+    Default: https://kc.gateway-vw.de:8443
+    Description: Public HTTPS Keycloak URL for browser redirects, OIDC discovery and issuer. Must be resolvable from Lambda.
+  ExpectedPortalCount:
+    Type: Number
+    Default: 9
+    MinValue: 1
+  KmsKeyArn:
+    Type: String
+    Description: Customer-managed KMS key ARN used for DynamoDB encryption.
+  WebAclArn:
+    Type: String
+    Default: ''
+    Description: Optional WAFv2 WebACL ARN associated with the HttpApi stage.
+  ApiStageName:
+    Type: String
+    Default: '$default'
+  LogRetentionDays:
+    Type: Number
+    Default: 30
+    AllowedValues: [1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653]
+  ThrottlingBurstLimit:
+    Type: Number
+    Default: 1000
+  ThrottlingRateLimit:
+    Type: Number
+    Default: 500
+
+Conditions:
+  HasWebAcl: !Not [!Equals [!Ref WebAclArn, '']]
+
+Resources:
+  MigrationTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${AWS::StackName}-passkey-migration'
+      AttributeDefinitions:
+        - AttributeName: kcSub
+          AttributeType: S
+      KeySchema:
+        - AttributeName: kcSub
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+        KMSMasterKeyId: !Ref KmsKeyArn
+      Tags:
+        - Key: Purpose
+          Value: passkey-migration-user-cache
+
+  SessionTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${AWS::StackName}-sessions'
+      AttributeDefinitions:
+        - AttributeName: sid
+          AttributeType: S
+      KeySchema:
+        - AttributeName: sid
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      TimeToLiveSpecification:
+        AttributeName: expiresAt
+        Enabled: true
+      SSESpecification:
+        SSEEnabled: true
+        KMSMasterKeyId: !Ref KmsKeyArn
+      Tags:
+        - Key: Purpose
+          Value: passkey-bff-revocable-sessions
+
+  FunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${AWS::StackName}-passkey-bff'
+      RetentionInDays: !Ref LogRetentionDays
+
+  ApiAccessLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/apigateway/${AWS::StackName}-bff-access'
+      RetentionInDays: !Ref LogRetentionDays
+
+  BffFunction:
+    Type: AWS::Serverless::Function
+    DependsOn: FunctionLogGroup
+    Properties:
+      FunctionName: !Sub '${AWS::StackName}-passkey-bff'
+      Runtime: nodejs24.x
+      Handler: src/handler.handler
+      CodeUri: ./
+      Timeout: 30
+      MemorySize: 512
+      ReservedConcurrentExecutions: 500
+      Tracing: Active
+      Architectures: [x86_64]
+      Environment:
+        Variables:
+          STORE: dynamodb
+          TABLE_NAME: !Ref MigrationTable
+          SESSION_TABLE_NAME: !Ref SessionTable
+          KC_BASE_URL: !Ref KcBaseUrl
+          KC_PUBLIC_URL: !Ref KcPublicUrl
+          PHASE: !Ref Phase
+          EXPECTED_PORTAL_COUNT: !Ref ExpectedPortalCount
+
+          # CloudFormation dynamic references. The deployer role needs
+          # secretsmanager:GetSecretValue and kms:Decrypt. Lambda receives
+          # plaintext env values encrypted by AWS at rest.
+          # Secrets Manager labels (AWSCURRENT) avoid hardcoded SSM version pins.
+          PORTALS_JSON: '{{resolve:secretsmanager:vw/passkey-bff/portals:SecretString:PORTALS_JSON}}'
+          SESSION_ENC_KEY_B64U: '{{resolve:secretsmanager:vw/passkey-bff/session-enc-key:SecretString:value}}'
+          SESSION_ENC_KEY_PREVIOUS_B64U: '{{resolve:secretsmanager:vw/passkey-bff/session-enc-key-previous:SecretString:value}}'
+          TX_ENC_KEY_B64U: '{{resolve:secretsmanager:vw/passkey-bff/tx-enc-key:SecretString:value}}'
+          TX_ENC_KEY_PREVIOUS_B64U: '{{resolve:secretsmanager:vw/passkey-bff/tx-enc-key-previous:SecretString:value}}'
+          ENROLLED_ENC_KEY_B64U: '{{resolve:secretsmanager:vw/passkey-bff/enrolled-enc-key:SecretString:value}}'
+          ENROLLED_ENC_KEY_PREVIOUS_B64U: '{{resolve:secretsmanager:vw/passkey-bff/enrolled-enc-key-previous:SecretString:value}}'
+      Role: !GetAtt BffRole.Arn
+
+  BffRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${AWS::StackName}-bff-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
+      Policies:
+        - PolicyName: ddb-and-kms
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                Resource:
+                  - !GetAtt MigrationTable.Arn
+                  - !GetAtt SessionTable.Arn
+              - Effect: Allow
+                Action:
+                  - kms:Decrypt
+                  - kms:GenerateDataKey
+                Resource: !Ref KmsKeyArn
+
+  BffHttpApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub '${AWS::StackName}-bff-api'
+      ProtocolType: HTTP
+      DisableExecuteApiEndpoint: true
+
+  BffIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref BffHttpApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BffFunction.Arn}/invocations'
+      PayloadFormatVersion: '2.0'
+      TimeoutInMillis: 30000
+
+  BffLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref BffFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${BffHttpApi}/*'
+
+  LoginRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref BffHttpApi
+      RouteKey: 'GET /auth/login'
+      Target: !Sub 'integrations/${BffIntegration}'
+  EnrollRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref BffHttpApi
+      RouteKey: 'GET /auth/enroll'
+      Target: !Sub 'integrations/${BffIntegration}'
+  CallbackRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref BffHttpApi
+      RouteKey: 'GET /auth/callback'
+      Target: !Sub 'integrations/${BffIntegration}'
+  LogoutRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref BffHttpApi
+      RouteKey: 'GET /auth/logout'
+      Target: !Sub 'integrations/${BffIntegration}'
+  MeRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref BffHttpApi
+      RouteKey: 'GET /me'
+      Target: !Sub 'integrations/${BffIntegration}'
+
+  BffStage:
+    Type: AWS::ApiGatewayV2::Stage
+    DependsOn:
+      - LoginRoute
+      - EnrollRoute
+      - CallbackRoute
+      - LogoutRoute
+      - MeRoute
+    Properties:
+      ApiId: !Ref BffHttpApi
+      StageName: !Ref ApiStageName
+      AutoDeploy: true
+      DefaultRouteSettings:
+        ThrottlingBurstLimit: !Ref ThrottlingBurstLimit
+        ThrottlingRateLimit: !Ref ThrottlingRateLimit
+      AccessLogSettings:
+        DestinationArn: !GetAtt ApiAccessLogGroup.Arn
+        Format: >-
+          {"requestId":"$context.requestId","ip":"$context.identity.sourceIp",
+          "requestTime":"$context.requestTime","httpMethod":"$context.httpMethod",
+          "path":"$context.path","status":$context.status,
+          "responseLength":$context.responseLength}
+      Tags:
+        - Key: Purpose
+          Value: passkey-bff-api
+
+  WebAclAssociation:
+    Condition: HasWebAcl
+    Type: AWS::WAFv2::WebACLAssociation
+    Properties:
+      ResourceArn: !Sub 'arn:aws:apigateway:${AWS::Region}::/apis/${BffHttpApi}/stages/${ApiStageName}'
+      WebACLArn: !Ref WebAclArn
+
+Outputs:
+  HttpApiId:
+    Description: Pass to the per-portal custom-domain stack generator.
+    Value: !Ref BffHttpApi
+  IntegrationId:
+    Description: Pass to the per-portal custom-domain stack generator.
+    Value: !Ref BffIntegration
+  ApiStageName:
+    Value: !Ref ApiStageName
+  BffFunctionName:
+    Value: !Ref BffFunction
+  MigrationTableName:
+    Value: !Ref MigrationTable
+  SessionTableName:
+    Value: !Ref SessionTable

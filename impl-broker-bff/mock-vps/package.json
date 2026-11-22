@@ -1,0 +1,14 @@
+{
+  "name": "mock-ionos-vps",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Local Node mocks of the IONOS VPS: single-port simple mock and separate-port emulated topology.",
+  "scripts": {
+    "start": "node server.js",
+    "start:emulated": "bash emulated/start-emulated.sh"
+  },
+  "dependencies": {
+    "jose": "^5.9.6"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "name": "vw-portal-bff",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Backend-for-Frontend: Keycloak IdP broker callback, OIDC PKCE, encrypted session cookie",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "start": "node --env-file=.env src/local-server.js",
+    "start:mock": "node --env-file=.env.mock src/local-server.js",
+    "start:emulated": "node --env-file=.env.emulated src/local-server.js",
+    "test": "node --test tests/*.test.js",
+    "ops:preflight": "node ops/preflight.js",
+    "ops:generate:domains": "node ops/generate-api-domains.js",
+    "ops:generate:realms": "node ops/generate-realms.js"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.700.0",
+    "@aws-sdk/lib-dynamodb": "^3.700.0",
+    "cookie": "^1.0.2",
+    "jose": "^5.9.6",
+    "openid-client": "6.9.1",
+    "zod": "4.6.7"
+  }
+}

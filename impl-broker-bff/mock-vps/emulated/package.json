@@ -1,0 +1,13 @@
+{
+  "name": "mock-emulated-ionos-vps",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Separate-port Node emulation of nginx + Keycloak + Postgres + external Verimi",
+  "scripts": {
+    "start": "bash start-emulated.sh"
+  },
+  "dependencies": {
+    "jose": "^5.9.6"
+  }
+}

@@ -1,0 +1,165 @@
+{
+  "realm": "vw-beav",
+  "enabled": true,
+  "displayName": "VW BEAV Portal",
+  "loginTheme": "vw",
+  "sslRequired": "all",
+  "registrationAllowed": false,
+  "resetPasswordAllowed": false,
+  "rememberMe": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "bruteForceProtected": true,
+  "maxFailureWaitSeconds": 900,
+  "minimumQuickLoginWaitSeconds": 60,
+  "failureFactor": 5,
+  "accessTokenLifespan": 300,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 43200,
+  "eventsEnabled": true,
+  "adminEventsEnabled": true,
+  "adminEventsDetailsEnabled": false,
+  "eventsListeners": [
+    "jboss-logging"
+  ],
+  "webAuthnPolicyPasswordlessRpEntityName": "VW Portal",
+  "webAuthnPolicyPasswordlessRpId": "gateway-vw.de",
+  "webAuthnPolicyPasswordlessSignatureAlgorithms": [
+    "ES256",
+    "RS256"
+  ],
+  "webAuthnPolicyPasswordlessAttestationConveyancePreference": "not specified",
+  "webAuthnPolicyPasswordlessAuthenticatorAttachment": "not specified",
+  "webAuthnPolicyPasswordlessCreateTimeout": 0,
+  "webAuthnPolicyPasswordlessAvoidSameAuthenticatorRegister": false,
+  "webAuthnPolicyPasswordlessUserVerificationRequirement": "required",
+  "webAuthnPolicyPasswordlessResidentKey": "required",
+  "webAuthnPolicyPasswordlessAcceptableAaguids": [],
+  "webAuthnPolicyPasswordlessExtraOrigins": [],
+  "webAuthnPolicyPasswordlessPasskeysEnabled": true,
+  "webAuthnPolicyPasswordlessMediation": "optional",
+  "requiredActions": [
+    {
+      "alias": "webauthn-register-passwordless",
+      "name": "Webauthn Register Passwordless",
+      "providerId": "webauthn-register-passwordless",
+      "enabled": true,
+      "defaultAction": false,
+      "priority": 10
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "portal-spa",
+      "name": "VW BEAV Portal BFF Client",
+      "description": "Confidential BFF client. PKCE + client secret. No tokens in browser JS.",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "${vault.vw-beav_portal-spa-secret}",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "fullScopeAllowed": false,
+      "redirectUris": [
+        "https://vw-baev.de/api/auth/callback"
+      ],
+      "webOrigins": [
+        "https://vw-baev.de"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "https://vw-baev.de/?logged_out=1"
+      },
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "profile",
+        "roles",
+        "email"
+      ],
+      "optionalClientScopes": [
+        "address",
+        "phone"
+      ],
+      "protocolMappers": [
+        {
+          "name": "verimi_sub",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "verimi_sub",
+            "user.attribute": "verimi_sub",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "jsonType.label": "String"
+          }
+        },
+        {
+          "name": "account-audience-for-credential-check",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "account",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "introspection.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "identityProviders": [
+    {
+      "alias": "verimi",
+      "displayName": "Verimi",
+      "providerId": "oidc",
+      "enabled": true,
+      "hideOnLoginPage": true,
+      "trustEmail": false,
+      "storeToken": false,
+      "syncMode": "FORCE",
+      "firstBrokerLoginFlowAlias": "first broker login",
+      "config": {
+        "authorizationUrl": "https://REPLACE_VERIMI_HOST/oauth/authorize",
+        "tokenUrl": "https://REPLACE_VERIMI_HOST/oauth/token",
+        "userInfoUrl": "https://REPLACE_VERIMI_HOST/oauth/userinfo",
+        "logoutUrl": "",
+        "jwksUrl": "https://REPLACE_VERIMI_HOST/oauth/jwks",
+        "issuer": "https://REPLACE_VERIMI_HOST",
+        "clientId": "REPLACE_VERIMI_CLIENT_ID",
+        "clientSecret": "${vault.vw-beav_verimi-client-secret}",
+        "clientAuthMethod": "client_secret_post",
+        "defaultScope": "openid profile email",
+        "disableUserInfo": "false",
+        "validateSignature": "true",
+        "backchannelSupported": "false"
+      }
+    }
+  ],
+  "identityProviderMappers": [
+    {
+      "name": "verimi-sub-to-user-attribute",
+      "identityProviderAlias": "verimi",
+      "config": {
+        "syncMode": "FORCE",
+        "identityProviderMapper": "oidc-user-attribute-idp-mapper",
+        "claim": "sub",
+        "user.attribute": "verimi_sub"
+      }
+    },
+    {
+      "name": "verimi-email-to-user-email",
+      "identityProviderAlias": "verimi",
+      "config": {
+        "syncMode": "FORCE",
+        "identityProviderMapper": "oidc-user-attribute-idp-mapper",
+        "claim": "email",
+        "user.attribute": "email"
+      }
+    }
+  ]
+}

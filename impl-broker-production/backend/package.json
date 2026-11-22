@@ -1,0 +1,25 @@
+{
+  "name": "vw-portal-bff-production",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Production BFF: Keycloak IdP brokering, OIDC PKCE, encrypted cookies, revocable sessions",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "ops:preflight": "node ops/preflight.js",
+    "ops:generate:domains": "node ops/generate-api-domains.js",
+    "ops:generate:realms": "node ops/generate-realms.js",
+    "ops:verify:keycloak": "bash ops/verify-keycloak.sh"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.700.0",
+    "@aws-sdk/lib-dynamodb": "^3.700.0",
+    "cookie": "^1.0.2",
+    "jose": "^5.9.6",
+    "openid-client": "6.9.1",
+    "zod": "4.6.7"
+  }
+}

@@ -26,7 +26,7 @@ Problems:
 - **No audit trail of "who vouched"**: Keycloak would see an admin-created user, not a Verimi-authenticated one.
 - **Race/duplicate users**: 9 portals × retries → duplicate accounts unless idempotency keys are perfect.
 
-Fix: **Make Keycloak the front door.** Verimi becomes an upstream IdP that Keycloak brokers. Keycloak auto-provisions the user on first successful Verimi login (JIT). The portal then triggers passkey registration with one redirect.
+Fix: **Make Keycloak the front door.** ⚠️ This is a **target-state change**: today the portals redirect *directly* to Verimi (Phase A in §2.1). Verimi becomes an upstream IdP that Keycloak brokers. Keycloak auto-provisions the user on first successful Verimi login (JIT). The portal then triggers passkey registration with one redirect. **Verimi is still required for the first login — by design — until the passkey exists.**
 
 ---
 
@@ -42,9 +42,21 @@ Fix: **Make Keycloak the front door.** Verimi becomes an upstream IdP that Keycl
 
 Rule: portal owns account↔sub mapping; Keycloak owns credentials. Joined only by opaque `sub`.
 
+### 2.1 Phase model — read this before any diagram
+
+The original diagram was misleading because it showed only the **target** state. There are three phases:
+
+| Phase | Front door | Is Verimi needed to enter the portal? | Passkey state |
+|-------|-----------|----------------------------------------|---------------|
+| **A — today** | Verimi (direct from portal) | ✅ **Yes, always.** No Verimi = no portal. | none |
+| **B — transition** | Keycloak → brokers Verimi | First login: ✅ Yes. Later logins: ❌ No (passkey). | bootstrapped on first login |
+| **C — after 2026-12-31** | Keycloak (passkey) | ❌ No — Verimi is gone. | required (or recovery) |
+
+Key rule: **a passkey can only be created inside an authenticated browser session.** Therefore Verimi must authenticate the user *once* before a passkey can exist. The dependency on Verimi is real but **temporary**.
+
 ---
 
-## 3. Recommended flow (step by step, who calls whom)
+## 3. Recommended flow (Phase B — target state; step by step, who calls whom)
 
 ```
 Browser (portal.vw-baev.de)
@@ -156,50 +168,92 @@ Impersonation in Keycloak lets an admin (with `impersonation` role) mint a full 
 
 ---
 
-## 10. C4-style ASCII diagram
+## 10. C4-style ASCII diagram — corrected (three phases)
+
+> ⚠️ **Correction (2026-11-19):** the previous diagram showed only the *target* design and
+> implied you could enter the portal without Verimi. That was misleading. Today (Phase A)
+> login **does** require Verimi — the portals redirect to Verimi directly and Keycloak is
+> not in the path at all. Verimi is only removed after a passkey exists. See §2.1.
+
+### 10.1 Phase A — TODAY: Verimi is the front door, Keycloak is not involved
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│  Browser (user)                                                     │
-│  portals: vw-baev.de, ltkv.de, ... (9 domains)                     │
-└──────────────┬──────────────────────────────────────┬───────────────┘
-               │ 1. click login / create passkey       │
-               ▼                                      │
-┌──────────────────────────────┐                      │
-│  Portal SPA (JS)             │                      │
-│  - shows popup               │                      │
-│  - redirects to Keycloak     │                      │
-└──────────────┬───────────────┘                      │
-               │ OIDC authorize (kc_idp_hint=verimi     │
-               │  or kc_action=webauthn-register-...)    │
-               ▼                                      │
-┌──────────────────────────────────────────────────────┐│
-│  nginx (IONOS VPS)  kc.gateway-vw.de:8443 (public)   ││
-│                    kc-admin...:8444 (admin console)  ││
-└──────────────┬───────────────────────────────────────┘│
-               ▼                                      │
-┌──────────────────────────────────────────────────────┐│
-│  Keycloak (Docker)                                    ││
-│  - realm vw, clients per portal                      ││
-│  - IdP: Verimi (broker)                              ││
-│  - WebAuthn policy (RP ID fixed)                     ││
-│  - JIT user provisioning                             ││
-└──────┬──────────────────┬────────────────────────────┘│
-       │ broker (OIDC)     │ store public keys          │
-       ▼                  ▼                           │
-┌──────────────┐   ┌──────────────┐                   │
-│  Verimi      │   │  Postgres    │                   │
-│  (external,  │   │  (Docker)    │                   │
-│   shuts down │   │  users,      │                   │
-│   2026-12-31)│   │  creds       │                   │
-└──────────────┘   └──────────────┘                   │
-                                                       │
-┌──────────────────────────────┐                      │
-│  AWS Lambda (portal backend) │◄─────────────────────┘
-│  - standard OIDC client      │   token exchange / BFF
-│  - NO admin secrets          │
-│  - NO impersonation          │
-└──────────────────────────────┘
+  ┌───────────────────────┐      ┌────────────────────────────┐      ┌─────────────────────┐
+  │ Browser               │      │ Portal                     │      │ Verimi              │
+  │ 9 portal domains      │─────►│ SPA + AWS Lambda           │─────►│ external IdP        │
+  │ vw-baev.de, ltkv.de…  │◄─────│ portal session cookie      │◄─────│ auth + id_token     │
+  └───────────────────────┘      └────────────────────────────┘      └─────────────────────┘
+                                  ▲
+                                  └── Keycloak / IONOS: NOT in this path
+
+  1. Browser → Portal        GET https://vw-baev.de/login
+  2. Portal  → Browser       302 → Verimi /authorize?client_id=…&redirect_uri=…&state=…
+  3. Browser → Verimi        user authenticates (unchanged Verimi code)
+  4. Verimi  → Portal        302 → /callback?code=…&state=…
+  5. Lambda  → Verimi        POST /token (code + client secret) → id_token
+  6. Portal creates session; user is IN — but ONLY because Verimi authenticated.
+
+  ⇒ Verimi offline ⇒ steps 2-5 impossible ⇒ NO portal access.  ✅ your point is correct
+```
+
+### 10.2 Phase B — TRANSITION: Keycloak front door, Verimi broker, passkey bootstrap
+
+```
+  ┌───────────────────────┐      ┌────────────────────────────┐      ┌──────────────────────────────────┐
+  │ Browser               │      │ Portal                     │      │ IONOS: nginx → Keycloak          │
+  │ 9 portal domains      │─────►│ SPA + Lambda (BFF)         │─────►│ kc.gateway-vw.de:8443            │
+  │ no WebAuthn here      │◄─────│ redirect target CHANGED ⚠  │◄─────│ realm vw · 9 clients · IdP:verimi│
+  └──────────┬────────────┘      └────────────────────────────┘      └───┬──────────────────┬───────────┘
+             │                                                          │ broker (OIDC)    │ store pubkey
+             │                                                 ┌────────▼─────────┐ ┌──────▼────────────┐
+             │                                                 │ Verimi           │ │ Postgres (Docker) │
+             │                                                 │ upstream IdP     │ │ users + passkeys  │
+             │                                                 └──────────────────┘ └───────────────────┘
+             └───── authenticator (QR / USB / biometric) ◄───── WebAuthn runs at kc.gateway-vw.de:8443
+                   (RP ID = gateway-vw.de; portal domains never call navigator.credentials)
+
+  1. Browser → Portal       GET /login
+  2. Portal  → Browser      302 → https://kc.gateway-vw.de:8443/realms/vw/protocol/
+                            openid-connect/auth?client_id=portal-vw-baev
+                            &redirect_uri=https://vw-baev.de/callback&response_type=code
+                            &scope=openid+profile&state=…&nonce=…&kc_idp_hint=verimi
+                            ⚠ THIS IS THE CHANGE: this URL used to point to Verimi
+  3. Keycloak (no SSO cookie) → Verimi /authorize; user authenticates (Verimi code unchanged)
+  4. Verimi  → Keycloak      /broker/verimi/endpoint?code=… → JIT user + Keycloak SSO cookie
+  5. Keycloak → Portal       302 → /callback?code=… (Keycloak code)
+  6. Lambda  → Keycloak      POST /token → tokens; map Keycloak sub → portal account
+  7. Popup "Create a passkey" → user clicks
+  8. SPA → Keycloak (2nd redirect): same /auth but
+            kc_action=webauthn-register-passwordless:skip_if_exists
+            NO kc_idp_hint (SSO cookie exists → Verimi is NOT contacted again)
+  9. Keycloak + authenticator: WebAuthn ceremony; public key stored in Postgres
+ 10. Keycloak → Portal       …?kc_action_status=success → hide popup
+ 11. Later logins: omit kc_idp_hint → passkey works, Verimi not needed. ✅
+```
+
+### 10.3 Phase C — AFTER 2026-12-31: passkey only, Verimi removed
+
+```
+  ┌───────────────────────┐      ┌────────────────────────────┐      ┌───────────────────────────────┐
+  │ Browser               │      │ Portal                     │      │ IONOS: nginx → Keycloak       │
+  │ 9 portal domains      │─────►│ SPA + Lambda (BFF)         │─────►│ kc.gateway-vw.de:8443         │
+  └───────────────────────┘◄─────└────────────────────────────┘◄─────│ IdP: verimi REMOVED           │
+                                                                     │ WebAuthn passwordless only    │
+                                                                     └───┬──────────────────┬────────┘
+                                                                         │ verify sig       │ lookup
+                                                                ┌────────▼────────┐ ┌───────▼─────────┐
+                                                                │ Authenticator   │ │ Postgres        │
+                                                                │ QR/USB/biometric│ │ public keys     │
+                                                                └─────────────────┘ └─────────────────┘
+
+  1. Browser → Portal       GET /login
+  2. Portal  → Browser      302 → Keycloak /auth?client_id=portal-vw-baev&… (NO kc_idp_hint)
+  3. Keycloak → Browser     passkey prompt → authenticator (QR/USB/biometric)
+  4. Keycloak verifies signature vs Postgres public key → SSO cookie + authorization code
+  5. Portal callback → Lambda POST /token → portal session. User is IN, Verimi not contacted.
+
+  ⚠ Users who never enrolled cannot log in here — recovery codes / email reset / support
+    process is mandatory (see §11 item 7).
 ```
 
 ---

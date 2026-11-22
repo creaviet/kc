@@ -1,0 +1,65 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: One API Gateway custom domain + /api base-path mapping for one portal.
+
+Parameters:
+  HttpApiId:
+    Type: String
+  IntegrationId:
+    Type: String
+    Description: Accepted for traceability; the ApiMapping targets the stage.
+  ApiStageName:
+    Type: String
+    Default: '$default'
+  PortalHost:
+    Type: String
+    Description: Portal hostname, for example vw-baev.de.
+  CertificateArn:
+    Type: String
+    Description: ACM certificate in the API Gateway region covering PortalHost.
+  BasePath:
+    Type: String
+    Default: /api
+  HostedZoneId:
+    Type: String
+    Default: ''
+    Description: Optional Route53 hosted zone ID. Leave empty if DNS is external.
+
+Conditions:
+  HasHostedZone: !Not [!Equals [!Ref HostedZoneId, '']]
+
+Resources:
+  PortalDomain:
+    Type: AWS::ApiGatewayV2::DomainName
+    Properties:
+      DomainName: !Ref PortalHost
+      DomainNameConfigurations:
+        - CertificateArn: !Ref CertificateArn
+          EndpointType: REGIONAL
+          SecurityPolicy: TLS_1_2
+
+  PortalApiMapping:
+    Type: AWS::ApiGatewayV2::ApiMapping
+    DependsOn: PortalDomain
+    Properties:
+      ApiId: !Ref HttpApiId
+      DomainName: !Ref PortalDomain
+      Stage: !Ref ApiStageName
+      ApiMappingKey: !Ref BasePath
+
+  PortalDnsRecord:
+    Condition: HasHostedZone
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Ref PortalHost
+      Type: CNAME
+      TTL: '300'
+      ResourceRecords:
+        - !GetAtt PortalDomain.RegionalDomainName
+
+Outputs:
+  RegionalDomainName:
+    Description: CNAME target if DNS is managed outside Route53.
+    Value: !GetAtt PortalDomain.RegionalDomainName
+  PortalHost:
+    Value: !Ref PortalHost

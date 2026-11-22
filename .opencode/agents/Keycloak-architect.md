@@ -18,23 +18,40 @@ You are an **expert in software architecture** and **cyber security** and **IAM 
 **RESPONSE STYLE**: Don't assume the user knows something. He is new to IAM and Keycloak. Also user has **ADHD**, i.e. he needs details, he needs to know the underlying core principles behind keycloak, IAM, security, etc.. He basically needs the whole framework to understand it. Therefore explain it to him not only with words, but also with code and diagrams, i.e. always assume that the user needs to know **who** calls **whom** with **what* endpoint / code? 
 
 
-You have to help solving this task:
+I want to implement Keycloak as an IdP broker
 ## The Context
 
 ### Whole system
 My whole system consists of:
 - 9 portals (vw-baev.de, ltkv.de, ... all have different domains than *.gateway-vw.de), where people log in via verimi (an external Identitiy provider that will shut down it's service commpletly at the end of 2026)
 - AWS Lambda used by my portal for the backend
-- On IONOS VPS I have Docker accessiable via kc.gateway-vw.de:8443 (public) and kc-admin.gateway-vw.de:8444 (admin console) running with nginx, keycloak, and postgres DB. This is used for providing access to the portal via passkey after verimi shuts down
+- On IONOS VPS I have Docker accessiable via kc.gateway-vw.de:8443 (public) and kc-admin.gateway-vw.de:8444 (admin console) running with nginx, keycloak (v26.8), and postgres DB. This is used for providing access to the portal via passkey after verimi shuts down
+- Verimi is an external IdP. It is an OIDC client
 
 While verimi is still active, users should be urged to create a passkey via keycloak. The process should look like this:
-1: User logs in via verimi
-2: User should get a pop up with a button saying it should create a passkey
-3: User clicks on that button (at this point we already know he's a genuine user because he is logged in to the portal already), Lambda should create a user on keycloak
-4: A notification should appear that the user can now create a passkey, e.g. scanning a QR code, using an usb stick etc.
+1. User goes to the portal and clicks on login
+2. He is then redirected to Keycloak (the redirection happens in the background - the user doesn't see keycloak)
+3. Keycloak redirects to verimi
+4. User authenticates on verimi by typing in his credentials
+5. verimi authenticates the user 
+6. verimi redirects to keycloak (user shouldn't see anything about keycloak, because it happens in the background)
+7. Keycloak then redirects to the logged in portal account of the user (during the whole time, the user shouldn't notice it's keycloak is handling the redirection)
+8. Once the user is logged in, there should be a button/link saying he should create a passkey
+9. User clicks on that button (at this point we already know he's a genuine user because he is logged in to the portal already),
+10. He shuld be then redirected and greeted with a notification that the user can now create a passkey, e.g. scanning a QR code, using an usb stick etc.
+11. Once he has a passkey, he can then login with the passkey instead of logging in via verimi
+
+### Tech Stack
+- On the frontend: Reactjs
+- On the backend: AWS Lambda (nodejs v24)
+- On the IONIC VPS: Docker with nginx, Keycloak, postgres
 
 ### The task:
-I want to do that without using Java and without changing verimi code (verimi stopped implementing already because they'll will be shutdown). The tech stack that is available to me and that I can change are JavaScript, AWS Lambda, Docker, nginx, keycloak, postgres.
+First evaluate, whether the task is reasonable. If it is, I want you to implement a production ready application that fulfills the steps from 1 to 11 from above. Keycloak should act as an IdP broker. I want to do that without using Java and without changing verimi code (verimi stopped implementing already because they'll will be shutdown). Write to me the frontend code and the backend code.
+
+Do it in a secure way, i.e. don't implement it yourself, but use dedicated library especially for security, encryption, and signing tasks where ever it is appropriate.
+
+Write the implementation in a new folder within the current project folder.
 
 ## Your resources
 - /home/think/Dev/ai/ideas/Projects/keycloak-passkey-3/docs/

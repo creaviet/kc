@@ -1,0 +1,44 @@
+/*
+ * Keycloak's WebAuthn AIA screen is the ONE place the user still sees a
+ * Keycloak-hosted page (your step 10). This theme removes Keycloak branding
+ * so it reads as part of vw-baev.de / ltkv.de.
+ *
+ * Selectors come from the `keycloak` base theme; verify them against your
+ * exact 26.8 build with browser dev-tools after deployment.
+ */
+
+:root {
+  --vw-blue: #0b5fff;
+}
+
+.login-pf-wrapper .card-pf {
+  border: 1px solid #dcdfe5;
+  border-radius: 10px;
+  box-shadow: none;
+}
+
+.login-pf-wrapper h1,
+#kc-page-title {
+  color: #1b1b1b;
+}
+
+/* Hide the "Keycloak" wordmark / "Powered by Keycloak" footer. */
+#kc-header-wrapper,
+.kc-logo-text,
+.login-pf-page .login-pf-footer,
+.pf-c-page__sidebar,
+footer {
+  display: none !important;
+}
+
+#kc-login,
+#kc-webauthn-register,
+input[type="submit"] {
+  background: var(--vw-blue) !important;
+  border-color: var(--vw-blue) !important;
+  border-radius: 6px !important;
+}
+
+body {
+  background: #f5f6f8 !important;
+}

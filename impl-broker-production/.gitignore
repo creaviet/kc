@@ -1,0 +1,18 @@
+node_modules/
+dist/
+.env
+.env.*
+*.pem
+*.key
+*.crt
+.DS_Store
+
+# Runtime-generated secrets/imports are ignored in their own folders too.
+keycloak/generated/*
+!keycloak/generated/.gitignore
+keycloak/vault/*
+!keycloak/vault/.gitignore
+certs/*
+!certs/.gitignore
+backend/ops/generated/*
+!backend/ops/generated/.gitignore

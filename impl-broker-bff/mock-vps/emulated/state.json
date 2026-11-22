@@ -1,0 +1,8 @@
+{
+  "user": {
+    "sub": "mock-user-1",
+    "verimiSub": "verimi-123",
+    "passkeyEnrolled": true
+  },
+  "updatedAt": "2026-11-20T22:38:59.130Z"
+}

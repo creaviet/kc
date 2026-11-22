@@ -1,0 +1,48 @@
+{
+  "_comment": "Copy to domains.json. Keys must equal portalHost from portals.json. ACM certificate must be in the Lambda/API Gateway region.",
+  "REPLACE_PORTAL_01_HOST.example": {
+    "apiHost": "REPLACE_API_01_HOST.example",
+    "certificateArn": "arn:aws:acm:REPLACE_REGION:REPLACE_ACCOUNT_ID:certificate/REPLACE_CERT_01_ID",
+    "hostedZoneId": "REPLACE_ZONE_01_ID"
+  },
+  "REPLACE_PORTAL_02_HOST.example": {
+    "apiHost": "REPLACE_API_02_HOST.example",
+    "certificateArn": "arn:aws:acm:REPLACE_REGION:REPLACE_ACCOUNT_ID:certificate/REPLACE_CERT_02_ID",
+    "hostedZoneId": "REPLACE_ZONE_02_ID"
+  },
+  "REPLACE_PORTAL_03_HOST.example": {
+    "apiHost": "REPLACE_API_03_HOST.example",
+    "certificateArn": "arn:aws:acm:REPLACE_REGION:REPLACE_ACCOUNT_ID:certificate/REPLACE_CERT_03_ID",
+    "hostedZoneId": "REPLACE_ZONE_03_ID"
+  },
+  "REPLACE_PORTAL_04_HOST.example": {
+    "apiHost": "REPLACE_API_04_HOST.example",
+    "certificateArn": "arn:aws:acm:REPLACE_REGION:REPLACE_ACCOUNT_ID:certificate/REPLACE_CERT_04_ID",
+    "hostedZoneId": "REPLACE_ZONE_04_ID"
+  },
+  "REPLACE_PORTAL_05_HOST.example": {
+    "apiHost": "REPLACE_API_05_HOST.example",
+    "certificateArn": "arn:aws:acm:REPLACE_REGION:REPLACE_ACCOUNT_ID:certificate/REPLACE_CERT_05_ID",
+    "hostedZoneId": "REPLACE_ZONE_05_ID"
+  },
+  "REPLACE_PORTAL_06_HOST.example": {
+    "apiHost": "REPLACE_API_06_HOST.example",
+    "certificateArn": "arn:aws:acm:REPLACE_REGION:REPLACE_ACCOUNT_ID:certificate/REPLACE_CERT_06_ID",
+    "hostedZoneId": "REPLACE_ZONE_06_ID"
+  },
+  "REPLACE_PORTAL_07_HOST.example": {
+    "apiHost": "REPLACE_API_07_HOST.example",
+    "certificateArn": "arn:aws:acm:REPLACE_REGION:REPLACE_ACCOUNT_ID:certificate/REPLACE_CERT_07_ID",
+    "hostedZoneId": "REPLACE_ZONE_07_ID"
+  },
+  "REPLACE_PORTAL_08_HOST.example": {
+    "apiHost": "REPLACE_API_08_HOST.example",
+    "certificateArn": "arn:aws:acm:REPLACE_REGION:REPLACE_ACCOUNT_ID:certificate/REPLACE_CERT_08_ID",
+    "hostedZoneId": "REPLACE_ZONE_08_ID"
+  },
+  "REPLACE_PORTAL_09_HOST.example": {
+    "apiHost": "REPLACE_API_09_HOST.example",
+    "certificateArn": "arn:aws:acm:REPLACE_REGION:REPLACE_ACCOUNT_ID:certificate/REPLACE_CERT_09_ID",
+    "hostedZoneId": "REPLACE_ZONE_09_ID"
+  }
+}

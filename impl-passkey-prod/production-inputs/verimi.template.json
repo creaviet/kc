@@ -1,0 +1,11 @@
+{
+  "_comment": "Copy to verimi.json. This file contains a real client secret. Keep it gitignored.",
+  "authorizationUrl": "REPLACE_VERIMI_AUTHORIZATION_URL",
+  "tokenUrl": "REPLACE_VERIMI_TOKEN_URL",
+  "userInfoUrl": "REPLACE_VERIMI_USERINFO_URL",
+  "logoutUrl": "REPLACE_VERIMI_LOGOUT_URL",
+  "jwksUrl": "REPLACE_VERIMI_JWKS_URL",
+  "issuer": "REPLACE_VERIMI_ISSUER",
+  "clientId": "REPLACE_VERIMI_CLIENT_ID",
+  "clientSecret": "REPLACE_VERIMI_CLIENT_SECRET"
+}

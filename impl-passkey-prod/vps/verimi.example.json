@@ -1,0 +1,11 @@
+{
+  "_comment": "REAL Verimi OIDC metadata. Get these from Verimi before shutdown. Copy to verimi.json (gitignored) and fill real values — no placeholders may remain.",
+  "authorizationUrl": "",
+  "tokenUrl": "",
+  "userInfoUrl": "",
+  "logoutUrl": "",
+  "jwksUrl": "",
+  "issuer": "",
+  "clientId": "",
+  "clientSecret": ""
+}

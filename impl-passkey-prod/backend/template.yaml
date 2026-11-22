@@ -1,0 +1,141 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >-
+  Identity BFF for Keycloak OIDC brokering and passkey bootstrap.
+  Deploy: sam deploy --guided --template-file backend/template.yaml
+
+Parameters:
+  Stage:
+    Type: String
+    Default: prod
+    AllowedPattern: '^[a-z0-9-]{1,20}$'
+  TableSuffix:
+    Type: String
+    Description: Unique suffix for DynamoDB table names (e.g. prod)
+  PortalConfigJson:
+    Type: String
+    Description: JSON array of portal configurations (public values only, no secrets)
+  SecretsSecretArn:
+    Type: String
+    Description: ARN of the Secrets Manager secret containing portal client secrets
+  EncryptionKeysJson:
+    Type: String
+    NoEcho: true
+    Description: 'JSON map kid -> base64url 32-byte AES-256 key'
+  ActiveKeyId:
+    Type: String
+    Description: kid of the active key in EncryptionKeysJson
+  KcPublicUrl:
+    Type: String
+    Default: https://kc.gateway-vw.de:8443
+  WafWebAclArn:
+    Type: String
+    Default: ''
+    Description: Optional WAFv2 Web ACL ARN to associate with the HTTP API stage
+
+Conditions:
+  HasWaf: !Not [!Equals [!Ref WafWebAclArn, '']]
+
+Resources:
+  IdentityTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub 'vw-identity-${TableSuffix}'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
+  SessionTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub 'vw-sessions-${TableSuffix}'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: sid
+          AttributeType: S
+      KeySchema:
+        - AttributeName: sid
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
+  IdentityBffFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub 'vw-identity-bff-${Stage}'
+      CodeUri: .
+      Handler: src/handler.handler
+      Runtime: nodejs24.x
+      Architectures: [x86_64]
+      MemorySize: 512
+      Timeout: 15
+      Tracing: Active
+      Environment:
+        Variables:
+          NODE_ENV: production
+          STAGE: !Ref Stage
+          KC_PUBLIC_URL: !Ref KcPublicUrl
+          PORTALS_JSON: !Ref PortalConfigJson
+          SECRETS_SECRET_ID: !Ref SecretsSecretArn
+          ENCRYPTION_KEYS_JSON: !Ref EncryptionKeysJson
+          ACTIVE_KEY_ID: !Ref ActiveKeyId
+          IDENTITY_TABLE: !Ref IdentityTable
+          SESSION_TABLE: !Ref SessionTable
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:PutItem
+                - dynamodb:UpdateItem
+              Resource:
+                - !GetAtt IdentityTable.Arn
+                - !GetAtt SessionTable.Arn
+            - Effect: Allow
+              Action: secretsmanager:GetSecretValue
+              Resource: !Ref SecretsSecretArn
+      Events:
+        ApiProxy:
+          Type: HttpApi
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
+        ApiRoot:
+          Type: HttpApi
+          Properties:
+            Path: /
+            Method: ANY
+
+  ApiWafAssociation:
+    Type: AWS::WAFv2::WebACLAssociation
+    Condition: HasWaf
+    Properties:
+      ResourceArn: !Sub 'arn:aws:apigateway:${AWS::Region}::/apis/${ServerlessHttpApi}/stages/$default'
+      WebACLArn: !Ref WafWebAclArn
+
+Outputs:
+  HttpApiId:
+    Description: HTTP API id — used by ops/generate-api-domains.js for custom domains
+    Value: !Ref ServerlessHttpApi
+    Export:
+      Name: !Sub '${AWS::StackName}-HttpApiId'
+  HttpApiEndpoint:
+    Description: Default execute-api endpoint (do not expose to users)
+    Value: !Sub 'https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com'
+  IdentityTableName:
+    Value: !Ref IdentityTable
+  SessionTableName:
+    Value: !Ref SessionTable

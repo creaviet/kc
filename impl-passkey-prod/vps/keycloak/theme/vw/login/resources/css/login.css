@@ -1,0 +1,44 @@
+/* White-label login theme. No Keycloak wording, portal colours. */
+:root {
+  --vw-blue: #0a6fb0;
+  --vw-blue-dark: #075b91;
+  --vw-text: #16202a;
+  --vw-border: #dfe5ea;
+}
+
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif !important;
+  color: var(--vw-text);
+  background: #f4f6f8;
+}
+
+#kc-header-wrapper,
+.kc-logo-text {
+  color: var(--vw-blue) !important;
+  font-weight: 700;
+}
+
+.pf-c-button.pf-m-primary,
+button[type="submit"] {
+  background-color: var(--vw-blue) !important;
+  border-color: var(--vw-blue) !important;
+}
+
+.pf-c-button.pf-m-primary:hover,
+button[type="submit"]:hover {
+  background-color: var(--vw-blue-dark) !important;
+}
+
+.pf-c-login__main {
+  border: 1px solid var(--vw-border);
+  border-radius: 12px;
+}
+
+#kc-info-wrapper {
+  font-size: 0.875rem;
+}
+
+/* Hide the "powered by Keycloak" footer link if present in the base theme. */
+#kc-product {
+  display: none !important;
+}

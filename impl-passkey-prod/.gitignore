@@ -1,0 +1,16 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.env
+*.log
+backend/.env
+frontend/.env
+vps/certs/
+vps/keycloak/vault/*
+!vps/keycloak/vault/.gitignore
+vps/keycloak/generated/*
+!vps/keycloak/generated/.gitignore
+backend/ops/generated/*
+!backend/ops/generated/.gitignore
+vps/verimi.json
+vps/generated/

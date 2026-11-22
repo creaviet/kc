@@ -1,0 +1,24 @@
+{
+  "name": "vw-identity-bff",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Production Identity BFF: Keycloak OIDC brokering, PKCE, encrypted cookies, revocable sessions, passkey enrolment gating",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "ops:preflight": "node ops/preflight.js",
+    "ops:generate:domains": "node ops/generate-api-domains.js"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "3.901.0",
+    "@aws-sdk/client-secrets-manager": "3.901.0",
+    "@aws-sdk/lib-dynamodb": "3.901.0",
+    "cookie": "1.0.2",
+    "jose": "5.10.0",
+    "openid-client": "6.9.1",
+    "zod": "4.1.11"
+  }
+}

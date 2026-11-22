@@ -1,0 +1,9 @@
+# Templates are tracked; filled files are local only.
+portals.json
+domains.json
+verimi.json
+verimi-redirect-uris.txt
+vps.env
+admin-allow.conf
+aws-deploy.env
+frontend.env

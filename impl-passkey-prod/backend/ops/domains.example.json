@@ -1,0 +1,13 @@
+{
+  "_comment": "Fill with real ACM certificate ARNs and Route53 hosted zone IDs. Omit hostedZoneId if DNS is managed outside Route53.",
+  "vw-baev.de": {
+    "apiHost": "api.vw-baev.de",
+    "certificateArn": "arn:aws:acm:eu-central-1:123456789012:certificate/REPLACE",
+    "hostedZoneId": "ZREPLACE"
+  },
+  "ltkv.de": {
+    "apiHost": "api.ltkv.de",
+    "certificateArn": "arn:aws:acm:eu-central-1:123456789012:certificate/REPLACE",
+    "hostedZoneId": "ZREPLACE"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "_comment": "Replace the 7 example hosts with your real portal hostnames before deployment. This file contains PUBLIC configuration only — no secrets.",
+  "expectedPortalCount": 9,
+  "portals": [
+    {
+      "portalHost": "vw-baev.de",
+      "apiHost": "api.vw-baev.de",
+      "realm": "vw-beav",
+      "clientId": "portal-bff",
+      "secretKey": "vw-beav",
+      "redirectUri": "https://api.vw-baev.de/api/auth/callback",
+      "postLoginUrl": "https://vw-baev.de/",
+      "postLogoutUrl": "https://vw-baev.de/?logged_out=1",
+      "verimiEnabled": true
+    },
+    {
+      "portalHost": "ltkv.de",
+      "apiHost": "api.ltkv.de",
+      "realm": "ltkv",
+      "clientId": "portal-bff",
+      "secretKey": "ltkv",
+      "redirectUri": "https://api.ltkv.de/api/auth/callback",
+      "postLoginUrl": "https://ltkv.de/",
+      "postLogoutUrl": "https://ltkv.de/?logged_out=1",
+      "verimiEnabled": true
+    }
+  ]
+}

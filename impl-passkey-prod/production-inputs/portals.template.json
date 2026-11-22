@@ -1,0 +1,105 @@
+{
+  "_comment": "Copy to portals.json and replace every REPLACE_ placeholder. Public configuration only — no secrets here.",
+  "expectedPortalCount": 9,
+  "portals": [
+    {
+      "portalHost": "REPLACE_PORTAL_01_HOST.example",
+      "apiHost": "REPLACE_API_01_HOST.example",
+      "realm": "REPLACE_REALM_01",
+      "clientId": "portal-bff",
+      "secretKey": "REPLACE_SECRET_KEY_01",
+      "redirectUri": "https://REPLACE_API_01_HOST.example/api/auth/callback",
+      "postLoginUrl": "https://REPLACE_PORTAL_01_HOST.example/",
+      "postLogoutUrl": "https://REPLACE_PORTAL_01_HOST.example/?logged_out=1",
+      "verimiEnabled": true
+    },
+    {
+      "portalHost": "REPLACE_PORTAL_02_HOST.example",
+      "apiHost": "REPLACE_API_02_HOST.example",
+      "realm": "REPLACE_REALM_02",
+      "clientId": "portal-bff",
+      "secretKey": "REPLACE_SECRET_KEY_02",
+      "redirectUri": "https://REPLACE_API_02_HOST.example/api/auth/callback",
+      "postLoginUrl": "https://REPLACE_PORTAL_02_HOST.example/",
+      "postLogoutUrl": "https://REPLACE_PORTAL_02_HOST.example/?logged_out=1",
+      "verimiEnabled": true
+    },
+    {
+      "portalHost": "REPLACE_PORTAL_03_HOST.example",
+      "apiHost": "REPLACE_API_03_HOST.example",
+      "realm": "REPLACE_REALM_03",
+      "clientId": "portal-bff",
+      "secretKey": "REPLACE_SECRET_KEY_03",
+      "redirectUri": "https://REPLACE_API_03_HOST.example/api/auth/callback",
+      "postLoginUrl": "https://REPLACE_PORTAL_03_HOST.example/",
+      "postLogoutUrl": "https://REPLACE_PORTAL_03_HOST.example/?logged_out=1",
+      "verimiEnabled": true
+    },
+    {
+      "portalHost": "REPLACE_PORTAL_04_HOST.example",
+      "apiHost": "REPLACE_API_04_HOST.example",
+      "realm": "REPLACE_REALM_04",
+      "clientId": "portal-bff",
+      "secretKey": "REPLACE_SECRET_KEY_04",
+      "redirectUri": "https://REPLACE_API_04_HOST.example/api/auth/callback",
+      "postLoginUrl": "https://REPLACE_PORTAL_04_HOST.example/",
+      "postLogoutUrl": "https://REPLACE_PORTAL_04_HOST.example/?logged_out=1",
+      "verimiEnabled": true
+    },
+    {
+      "portalHost": "REPLACE_PORTAL_05_HOST.example",
+      "apiHost": "REPLACE_API_05_HOST.example",
+      "realm": "REPLACE_REALM_05",
+      "clientId": "portal-bff",
+      "secretKey": "REPLACE_SECRET_KEY_05",
+      "redirectUri": "https://REPLACE_API_05_HOST.example/api/auth/callback",
+      "postLoginUrl": "https://REPLACE_PORTAL_05_HOST.example/",
+      "postLogoutUrl": "https://REPLACE_PORTAL_05_HOST.example/?logged_out=1",
+      "verimiEnabled": true
+    },
+    {
+      "portalHost": "REPLACE_PORTAL_06_HOST.example",
+      "apiHost": "REPLACE_API_06_HOST.example",
+      "realm": "REPLACE_REALM_06",
+      "clientId": "portal-bff",
+      "secretKey": "REPLACE_SECRET_KEY_06",
+      "redirectUri": "https://REPLACE_API_06_HOST.example/api/auth/callback",
+      "postLoginUrl": "https://REPLACE_PORTAL_06_HOST.example/",
+      "postLogoutUrl": "https://REPLACE_PORTAL_06_HOST.example/?logged_out=1",
+      "verimiEnabled": true
+    },
+    {
+      "portalHost": "REPLACE_PORTAL_07_HOST.example",
+      "apiHost": "REPLACE_API_07_HOST.example",
+      "realm": "REPLACE_REALM_07",
+      "clientId": "portal-bff",
+      "secretKey": "REPLACE_SECRET_KEY_07",
+      "redirectUri": "https://REPLACE_API_07_HOST.example/api/auth/callback",
+      "postLoginUrl": "https://REPLACE_PORTAL_07_HOST.example/",
+      "postLogoutUrl": "https://REPLACE_PORTAL_07_HOST.example/?logged_out=1",
+      "verimiEnabled": true
+    },
+    {
+      "portalHost": "REPLACE_PORTAL_08_HOST.example",
+      "apiHost": "REPLACE_API_08_HOST.example",
+      "realm": "REPLACE_REALM_08",
+      "clientId": "portal-bff",
+      "secretKey": "REPLACE_SECRET_KEY_08",
+      "redirectUri": "https://REPLACE_API_08_HOST.example/api/auth/callback",
+      "postLoginUrl": "https://REPLACE_PORTAL_08_HOST.example/",
+      "postLogoutUrl": "https://REPLACE_PORTAL_08_HOST.example/?logged_out=1",
+      "verimiEnabled": true
+    },
+    {
+      "portalHost": "REPLACE_PORTAL_09_HOST.example",
+      "apiHost": "REPLACE_API_09_HOST.example",
+      "realm": "REPLACE_REALM_09",
+      "clientId": "portal-bff",
+      "secretKey": "REPLACE_SECRET_KEY_09",
+      "redirectUri": "https://REPLACE_API_09_HOST.example/api/auth/callback",
+      "postLoginUrl": "https://REPLACE_PORTAL_09_HOST.example/",
+      "postLogoutUrl": "https://REPLACE_PORTAL_09_HOST.example/?logged_out=1",
+      "verimiEnabled": true
+    }
+  ]
+}
